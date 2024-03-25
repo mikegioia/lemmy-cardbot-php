@@ -2,6 +2,11 @@ FROM php:8.3-cli-alpine
 
 RUN apk update
 RUN apk upgrade
-RUN apk add bash
+RUN apk add --no-cache bash
+
+RUN docker-php-ext-install pcntl
+
+## If we have custom php ini settings
+# COPY docker/php.ini /usr/local/etc/php/conf.d/cardbot.ini
 
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer

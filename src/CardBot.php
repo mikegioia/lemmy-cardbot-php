@@ -2,6 +2,9 @@
 
 namespace Lemmy;
 
+use Monolog\Handler\StreamHandler;
+use Monolog\Level;
+use Monolog\Logger;
 use Rikudou\LemmyApi\Enum\CommentSortType;
 use Rikudou\LemmyApi\Enum\Language;
 use Rikudou\LemmyApi\Enum\SortType;
@@ -14,15 +17,26 @@ final class CardBot
 {
     private bool $running = false;
 
+    private Logger $debugLog;
+    private Logger $errorLog;
+
     public const int COMMENT_LIMIT = 100;
     public const int POST_LIMIT = 10;
 
     public function __construct(
         private LemmyApi $api,
+        private string $logPath,
         private int $sleepFor,
         private string $username,
         #[\SensitiveParameter] private string $password,
     ) {
+        // Set up the debug log
+        $this->debugLog = new Logger('cardbot-debug');
+        $this->debugLog->pushHandler(new StreamHandler($this->logPath.'/debug.log', Level::Debug));
+
+        // Set up the error log
+        $this->errorLog = new Logger('cardbot-error');
+        $this->errorLog->pushHandler(new StreamHandler($this->logPath.'/error.log', Level::Debug));
     }
 
     public function start(): void

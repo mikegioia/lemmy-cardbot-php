@@ -9,6 +9,7 @@
  * or comment action in SQL database.
  */
 
+use Dotenv\Dotenv;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Psr7\HttpFactory;
 use Lemmy\CardBot;
@@ -28,20 +29,29 @@ if (! file_exists(__DIR__.'/vendor/autoload.php')) {
 
 require __DIR__.'/vendor/autoload.php';
 
-// Connection to Lemmy API
-$api = new DefaultLemmyApi(
-    instanceUrl: 'https://stage.mtgzone.com',
-    version: LemmyApiVersion::Version3,
-    httpClient: new HttpClient(),
-    requestFactory: new HttpFactory(),
-);
+// Load environment variables
+if (! Dotenv::createImmutable(__DIR__)->safeLoad()) {
+    echo 'Missing .env file!', PHP_EOL;
+    echo 'Please copy .env.example to .env and update it with your data', PHP_EOL;
+
+    exit(1);
+}
+
+// Create log directory and logger
+mkdir(__DIR__.'/log', 0755, true);
 
 // Load credentials from environment
 $cardbot = new CardBot(
-    api: $api,
-    sleepFor: 5, // 5 seconds
-    username: 'cardbot',
-    password: 'password'
+    api: new DefaultLemmyApi(
+        instanceUrl: $_ENV['INSTANCE_URL'] ?? '',
+        version: LemmyApiVersion::Version3,
+        httpClient: new HttpClient(),
+        requestFactory: new HttpFactory()
+    ),
+    logPath: __DIR__.'/log',
+    sleepFor: intval($_ENV['SLEEP_SECONDS'] ?? 5),
+    username: $_ENV['USERNAME'] ?? '',
+    password: $_ENV['PASSWORD'] ?? ''
 );
 
 $stopCardBot = function (int $signo) use ($cardbot) {
