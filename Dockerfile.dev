@@ -1,0 +1,7 @@
+FROM php:8.3-cli-alpine
+
+RUN apk update
+RUN apk upgrade
+RUN apk add bash
+
+COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
